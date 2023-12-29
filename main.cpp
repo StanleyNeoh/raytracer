@@ -1,15 +1,39 @@
 #include "color.hpp"
+#include "ray.hpp"
 #include "vec3.hpp"
 
 #include <iostream>
 
-using std::cout, std::clog;
+using std::cout, std::clog, std::max;
+
+color ray_color(const ray& r) {
+    vec3 unit_dir = unit_vector(r.direction());
+    auto a = 0.5 * (unit_dir.y() + 1.0);
+    return (1.0-a)*color(1.0, 1.0, 1.0) + a*color(0.5, 0.7, 1.0);
+}
 
 int main() {
 
     // Image 
-    int img_w = 256;
-    int img_h = 256;
+    double aspect_ratio = 16.0 / 9.0;
+    int img_w = 400;
+    int img_h = max(1, static_cast<int>(img_w / aspect_ratio));
+
+    // Camera
+    double focal_l = 1.0;
+    double vp_h = 2.0;
+    double vp_w = vp_h * (static_cast<double>(img_w) / img_h);
+    point3 camera_center = point3(0, 0, 0);
+
+    // Basis for viewport
+    vec3 vp_normal = vec3(0, 0, focal_l);
+    vec3 vp_u = vec3(vp_w, 0, 0);
+    vec3 vp_v = vec3(0, -vp_h, 0);
+    vec3 pixel_du = vp_u / img_w;
+    vec3 pixel_dv = vp_v / img_h;
+
+    vec3 vp_topleft = camera_center + vp_normal - vp_u/2 - vp_v/2;
+    vec3 pixel00_loc = vp_topleft + 0.5 * (pixel_du + pixel_dv);
 
     // Render
     cout << "P3\n" << img_w << ' ' << img_h << "\n255\n";
@@ -18,7 +42,11 @@ int main() {
         clog << "\rScanlines remaining: " << (img_h - j) << ' ' << std::flush;
 
         for (int i = 0; i < img_w; i++) {
-            auto pixel_color = color(double(i)/(img_w -1), double(j)/(img_h-1), 0);
+            vec3 pixel_center = pixel00_loc + (i * pixel_du) + (j * pixel_dv);
+            vec3 ray_dir = pixel_center - camera_center;
+            ray r(camera_center, ray_dir);
+
+            color pixel_color = ray_color(r);
             write_color(cout, pixel_color);
         }
         clog << "\rDone\n";

@@ -43,7 +43,7 @@ class vec3 {
             return *this;
         }
 
-        vec3& operator*=(double t) {
+        vec3& operator/=(double t) {
             return *this *= 1/t;
         }
 
