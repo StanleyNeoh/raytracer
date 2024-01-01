@@ -1,56 +1,41 @@
 #ifndef CAMERA_H
 #define CAMERA_H
 
+#include "../base/utils.hpp"
 #include "../base/vec3.hpp"
+#include "../base/interval.hpp"
 #include "../hittable/hittable.hpp"
 
 #include <iostream>
 
 class camera {
     public:
+        int img_w = 400;
+        double aspect_ratio  = 16.0 / 9.0;
+        int samples_per_pixel = 10;
+        point3 center;
+        vec3 direction; // length is focal length
+
         camera(point3 _center, vec3 _direction): center(_center), direction(_direction) {}
 
         void render_ppm(ostream& out, const hittable& world) {
             setup();
             out << "P3\n" << num_pixel_u << ' ' << num_pixel_v << "\n255\n";
-            for (int j = 0; j < num_pixel_u; j++) {
-                std::clog << "\rScanlines remaining: " << (num_pixel_v - j) << ' ' << std::flush;
-
-                for (int i = 0; i < img_w; i++) {
-                    vec3 pixel_center = pixel00_loc + (i * pixel_du) + (j * pixel_dv);
-                    vec3 ray_dir = pixel_center - center;
-                    ray r(center, ray_dir);
-
-                    color pixel_color = ray_color(r, world);
+            for (int vi = 0; vi < num_pixel_v; vi++) {
+                std::clog << "\rScanlines remaining: " << (num_pixel_v - vi) << ' ' << std::flush;
+                for (int ui = 0; ui < num_pixel_u; ui++) {
+                    color pixel_color(0, 0, 0);
+                    for (int sample = 0; sample < samples_per_pixel; sample++) {
+                        ray r = get_ray(ui, vi);
+                        pixel_color += ray_color(r, world);
+                    }
                     write_color(out, pixel_color);
                 }
             }
             std::clog << "\rDone                     \n";
         }
-
-        void reposition(point3 _center, vec3 _direction) {
-            direction = _direction;
-            center = _center;
-            to_setup = true;
-        }
-
-        void set_image_width(int width) {
-            img_w = width;
-            to_setup = true;
-        }
-
-        void set_aspect_ratio(double ratio) {
-            aspect_ratio = ratio;
-            to_setup = true;
-        }
         
     private:
-        bool to_setup = true;
-        int img_w = 400;
-        double aspect_ratio  = 16.0 / 9.0;
-        point3 center;
-        vec3 direction; // length is focal length
-
         point3 pixel00_loc;
         vec3 pixel_du;
         vec3 pixel_dv;
@@ -58,8 +43,6 @@ class camera {
         int num_pixel_v;
 
         void setup() {
-            if (!to_setup) return;
-            to_setup = false;
             num_pixel_v = std::max(1, static_cast<int>(img_w / aspect_ratio));
             num_pixel_u = img_w;
 
@@ -75,6 +58,15 @@ class camera {
                 + 0.5 * (pixel_du + pixel_dv);
         }
 
+        ray get_ray(int ui, int vi) {
+            // Get a randomly ssampled camera ray for the pixel at location ui, vi
+            double rui = random_double() - 0.5 + ui; 
+            double rvi = random_double() - 0.5 + vi; 
+            point3 pixel_center = pixel00_loc + (rui * pixel_du) + (rvi * pixel_dv);
+            vec3 ray_dir = pixel_center - center;
+            return ray(center, ray_dir);
+        }
+
         color ray_color(const ray& r, const hittable& world) {
             hit_record rec;
             if (world.hit(r, interval(0, infinity), rec)) {
@@ -87,10 +79,15 @@ class camera {
         }
 
         void write_color(ostream& out, color pixel_color) const {
+            double r = pixel_color.x() / samples_per_pixel;
+            double g = pixel_color.y() / samples_per_pixel;
+            double b = pixel_color.z() / samples_per_pixel;
+
             // Write the translated [0, 255] value of each color component.
-            out << static_cast<int>(255.999 * pixel_color.x()) << ' '
-                << static_cast<int>(255.999 * pixel_color.y()) << ' '
-                << static_cast<int>(255.999 * pixel_color.z()) << '\n';
+            static const interval intensity(0.000, 0.999);
+            out << static_cast<int>(255.999 * intensity.clamp(r)) << ' '
+                << static_cast<int>(255.999 * intensity.clamp(g)) << ' '
+                << static_cast<int>(255.999 * intensity.clamp(b)) << '\n';
         }
 };
 

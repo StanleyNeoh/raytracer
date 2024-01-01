@@ -3,7 +3,7 @@
 int main() {
     // World
     hittable_list world;
-    world.add(make_shared<sphere>(point3(0, 0, 3), 0.5));
+    world.add(make_shared<sphere>(point3(0, 0.5, 3), 1));
     world.add(make_shared<sphere>(point3(2, 2, 5), 0.25));
     world.add(make_shared<sphere>(point3(0, -100.5, 1), 100));
 
