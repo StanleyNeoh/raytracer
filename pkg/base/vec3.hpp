@@ -58,6 +58,7 @@ class vec3 {
 
 // point3 is just an alias for vec3, but useful for geometric clarity in the code.
 using point3 = vec3;
+using color = vec3;
 
 //  Vector Utility Functions
 inline ostream& operator<<(std::ostream &out, const vec3 &v) {
@@ -121,5 +122,10 @@ inline vec3 cross(const vec3 &u, const vec3 &v) {
 inline vec3 unit_vector(vec3 v) {
     return v / v.length();
 }
+
+inline vec3 vector_with_length(vec3 v, double l) {
+    return l * unit_vector(v);
+}
+
 #endif
 
