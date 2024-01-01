@@ -1,12 +1,16 @@
+#include "raytracing.hpp"
+
 #include "color.hpp"
-#include "ray.hpp"
-#include "vec3.hpp"
+#include "hittable.hpp"
+#include "hittable_list.hpp"
+#include "sphere.hpp"
 
-#include <iostream>
+color ray_color(const ray& r, const hittable& world) {
+    hit_record rec;
+    if (world.hit(r, 0, infinity, rec)) {
+        return 0.5 * (rec.normal + color(1,1,1));
+    }
 
-using std::cout, std::clog, std::max;
-
-color ray_color(const ray& r) {
     vec3 unit_dir = unit_vector(r.direction());
     auto a = 0.5 * (unit_dir.y() + 1.0);
     return (1.0-a)*color(1.0, 1.0, 1.0) + a*color(0.5, 0.7, 1.0);
@@ -18,6 +22,12 @@ int main() {
     double aspect_ratio = 16.0 / 9.0;
     int img_w = 400;
     int img_h = max(1, static_cast<int>(img_w / aspect_ratio));
+
+    // World
+    hittable_list world;
+    world.add(make_shared<sphere>(point3(0, 0, 3), 0.5));
+    world.add(make_shared<sphere>(point3(2, 2, 5), 0.25));
+    world.add(make_shared<sphere>(point3(0, -100.5, 1), 100));
 
     // Camera
     double focal_l = 1.0;
@@ -46,9 +56,9 @@ int main() {
             vec3 ray_dir = pixel_center - camera_center;
             ray r(camera_center, ray_dir);
 
-            color pixel_color = ray_color(r);
+            color pixel_color = ray_color(r, world);
             write_color(cout, pixel_color);
         }
-        clog << "\rDone\n";
     }
+    clog << "\rDone.                     \n";
 }
