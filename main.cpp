@@ -1,9 +1,4 @@
-#include "raytracing.hpp"
-
-#include "color.hpp"
-#include "hittable.hpp"
-#include "hittable_list.hpp"
-#include "sphere.hpp"
+#include "pkg/raytracer.hpp"
 
 color ray_color(const ray& r, const hittable& world) {
     hit_record rec;

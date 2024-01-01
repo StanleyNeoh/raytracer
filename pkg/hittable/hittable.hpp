@@ -1,8 +1,8 @@
 #ifndef HITTABLE_H
 #define HITTABLE_H
 
-#include "ray.hpp"
-#include "vec3.hpp"
+#include "../base/ray.hpp"
+#include "../base/vec3.hpp"
 
 class hit_record {
     public:
