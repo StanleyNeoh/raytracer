@@ -72,22 +72,33 @@ class camera {
         color ray_color(const ray& r, int depth, const hittable& world) {
             hit_record rec;
             if (depth <= 0) return color(0,0,0);
+
+            // Lower bound of interval set to 0.001 to prevent shadow acne.
+            // This is when the new_r appears under the surface and gets and extra hit.
             if (world.hit(r, interval(0.001, infinity), rec)) {
-                // Lower bound of interval set to 0.001 to prevent shadow acne.
-                // This is when the new_r appears under the surface and gets and extra hit.
-                ray new_r = ray(rec.p, vec3::random_unit_in_halfplane(rec.normal));
-                return 0.5 * ray_color(new_r, depth-1, world);
+                ray scattered;
+                color c(0, 0, 0);
+                if (rec.mat->scatter(r, rec, scattered)) {
+                    c = ray_color(scattered, depth-1, world);
+                }
+                rec.mat->transform(c);
+                return c;
             }
 
             vec3 unit_dir = unit_vector(r.direction());
             auto a = 0.5 * (unit_dir.y() + 1.0);
-            return (1.0-a)*color(1.0, 1.0, 1.0) + a*color(0.5, 0.7, 1.0);
+            return std::move((1.0-a)*color(1.0, 1.0, 1.0) + a*color(0.5, 0.7, 1.0));
         }
 
         void write_color(ostream& out, color pixel_color) const {
             double r = pixel_color.x() / samples_per_pixel;
             double g = pixel_color.y() / samples_per_pixel;
             double b = pixel_color.z() / samples_per_pixel;
+
+            // Apply gamma transform
+            r = sqrt(r);
+            g = sqrt(g);
+            b = sqrt(b);
 
             // Write the translated [0, 255] value of each color component.
             static const interval intensity(0.000, 0.999);

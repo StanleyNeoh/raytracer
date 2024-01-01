@@ -20,4 +20,9 @@ using std::shared_ptr, std::make_shared, std::sqrt;
 
 #include "camera/camera.hpp"
 
+#include "material/material.hpp"
+#include "material/lambertian.hpp"
+#include "material/isotropic.hpp"
+#include "material/metal.hpp"
+
 #endif

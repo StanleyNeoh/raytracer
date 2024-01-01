@@ -8,6 +8,13 @@
 using std::sqrt, std::ostream;
 
 class vec3;
+inline ostream& operator<<(std::ostream &out, const vec3 &v);
+inline vec3 operator+(const vec3 &u, const vec3 &v);
+inline vec3 operator-(const vec3 &u, const vec3 &v);
+inline vec3 operator*(const vec3 &u, const vec3 &v);
+inline vec3 operator*(double t, const vec3 &v);
+inline vec3 operator*(const vec3 &v, double t);
+inline vec3 operator/(const vec3 &v, double t);
 inline double dot(const vec3 &u, const vec3 &v);
 inline vec3 cross(const vec3 &u, const vec3 &v);
 inline vec3 unit_vector(vec3 v);
@@ -62,6 +69,11 @@ class vec3 {
             return sqrt(length_squared());
         }
 
+        bool near_zero() const {
+            double s = 1e-8;
+            return (fabs(e[0]) < s) && (fabs(e[0]) < s) && (fabs(e[0]) < s);
+        }
+
         static vec3 random() {
             // Creates a random vector with length < 1
             double p = random_double();
@@ -84,6 +96,11 @@ class vec3 {
             vec3 unit_vector = random_unit();
             if (dot(unit_vector, normal) < 0) unit_vector = -unit_vector;
             return unit_vector;
+        }
+
+        static vec3 reflect(const vec3& v, const vec3& n) {
+            // Assumes n is unit length
+            return v - 2*dot(v,n)*n;
         }
 };
 
