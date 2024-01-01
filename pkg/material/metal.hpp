@@ -7,14 +7,14 @@
 
 class metal: public material {
     public:
-        metal(const color& a): albedo(a) {};
+        metal(const color& a, double fuzz): albedo(a), fuzz(std::min(1.0, fuzz)) {};
         bool scatter(
             const ray& r_in,
             const hit_record& rec,
             ray& scattered
         ) const override {
             vec3 reflected = vec3::reflect(unit_vector(r_in.direction()), rec.normal);
-            scattered = ray(rec.p, reflected);
+            scattered = ray(rec.p, reflected + fuzz * vec3::random_unit());
             return true;
         }
         bool transform(color& scattered_color) const override {
@@ -24,6 +24,7 @@ class metal: public material {
 
     private:
         color albedo;
+        double fuzz;
 };
 
 #endif
