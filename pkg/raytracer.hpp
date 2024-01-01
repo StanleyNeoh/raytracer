@@ -14,6 +14,7 @@ using std::cout, std::clog, std::max;
 #include "base/ray.hpp"
 #include "base/vec3.hpp"
 #include "base/color.hpp"
+#include "base/interval.hpp"
 
 #include "hittable/hittable.hpp"
 #include "hittable/hittable_list.hpp"
