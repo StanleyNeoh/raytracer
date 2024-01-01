@@ -8,14 +8,7 @@
 
 class camera {
     public:
-        int img_w = 400;
-        double aspect_ratio  = 16.0 / 9.0;
-
         camera(point3 _center, vec3 _direction): center(_center), direction(_direction) {}
-
-        camera(): center(point3(0,0,0)), direction(vec3(0,0,1)) {
-            std::clog << direction << "== \n";
-        }
 
         void render_ppm(ostream& out, const hittable& world) {
             setup();
@@ -40,11 +33,24 @@ class camera {
             center = _center;
             to_setup = true;
         }
+
+        void set_image_width(int width) {
+            img_w = width;
+            to_setup = true;
+        }
+
+        void set_aspect_ratio(double ratio) {
+            aspect_ratio = ratio;
+            to_setup = true;
+        }
         
     private:
         bool to_setup = true;
+        int img_w = 400;
+        double aspect_ratio  = 16.0 / 9.0;
         point3 center;
         vec3 direction; // length is focal length
+
         point3 pixel00_loc;
         vec3 pixel_du;
         vec3 pixel_dv;
