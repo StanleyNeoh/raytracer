@@ -1,10 +1,17 @@
 #ifndef VEC3_H
 #define VEC3_H
 
+#include "utils.hpp"
 #include <cmath>
 #include <iostream>
 
 using std::sqrt, std::ostream;
+
+class vec3;
+inline double dot(const vec3 &u, const vec3 &v);
+inline vec3 cross(const vec3 &u, const vec3 &v);
+inline vec3 unit_vector(vec3 v);
+inline vec3 vector_with_length(vec3 v, double l);
 
 class vec3 {
     public:
@@ -53,6 +60,30 @@ class vec3 {
 
         double length() const {
             return sqrt(length_squared());
+        }
+
+        static vec3 random() {
+            // Creates a random vector with length < 1
+            double p = random_double();
+            double a = random_double() * pi;
+            double b = random_double() * 2 * pi;
+            double r = p * sin(a);
+            return vec3(r * cos(b), r * sin(b), p * cos(a));
+        }
+
+        static vec3 random_unit() {
+            // Creates a random vector with length == 1
+            double a = random_double() * pi;
+            double b = random_double() * 2 * pi;
+            double r = sin(a);
+            return vec3(r * cos(b), r * sin(b), cos(a));
+        }
+
+        static vec3 random_unit_in_halfplane(const vec3& normal) {
+            // Creates a random vector in the direction cwith length == 1
+            vec3 unit_vector = random_unit();
+            if (dot(unit_vector, normal) < 0) unit_vector = -unit_vector;
+            return unit_vector;
         }
 };
 

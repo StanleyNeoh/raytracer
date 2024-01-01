@@ -13,6 +13,8 @@ class camera {
         int img_w = 400;
         double aspect_ratio  = 16.0 / 9.0;
         int samples_per_pixel = 10;
+        int max_depth = 10;
+
         point3 center;
         vec3 direction; // length is focal length
 
@@ -27,7 +29,7 @@ class camera {
                     color pixel_color(0, 0, 0);
                     for (int sample = 0; sample < samples_per_pixel; sample++) {
                         ray r = get_ray(ui, vi);
-                        pixel_color += ray_color(r, world);
+                        pixel_color += ray_color(r, max_depth, world);
                     }
                     write_color(out, pixel_color);
                 }
@@ -59,7 +61,7 @@ class camera {
         }
 
         ray get_ray(int ui, int vi) {
-            // Get a randomly ssampled camera ray for the pixel at location ui, vi
+            // Get a randomly sampled camera ray for the pixel at location ui, vi
             double rui = random_double() - 0.5 + ui; 
             double rvi = random_double() - 0.5 + vi; 
             point3 pixel_center = pixel00_loc + (rui * pixel_du) + (rvi * pixel_dv);
@@ -67,10 +69,14 @@ class camera {
             return ray(center, ray_dir);
         }
 
-        color ray_color(const ray& r, const hittable& world) {
+        color ray_color(const ray& r, int depth, const hittable& world) {
             hit_record rec;
-            if (world.hit(r, interval(0, infinity), rec)) {
-                return 0.5 * (rec.normal + color(1,1,1));
+            if (depth <= 0) return color(0,0,0);
+            if (world.hit(r, interval(0.001, infinity), rec)) {
+                // Lower bound of interval set to 0.001 to prevent shadow acne.
+                // This is when the new_r appears under the surface and gets and extra hit.
+                ray new_r = ray(rec.p, vec3::random_unit_in_halfplane(rec.normal));
+                return 0.5 * ray_color(new_r, depth-1, world);
             }
 
             vec3 unit_dir = unit_vector(r.direction());
