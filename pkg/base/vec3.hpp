@@ -15,10 +15,6 @@ inline vec3 operator*(const vec3 &u, const vec3 &v);
 inline vec3 operator*(double t, const vec3 &v);
 inline vec3 operator*(const vec3 &v, double t);
 inline vec3 operator/(const vec3 &v, double t);
-inline double dot(const vec3 &u, const vec3 &v);
-inline vec3 cross(const vec3 &u, const vec3 &v);
-inline vec3 unit_vector(vec3 v);
-inline vec3 vector_with_length(vec3 v, double l);
 
 class vec3 {
     public:
@@ -74,33 +70,52 @@ class vec3 {
             return (fabs(e[0]) < s) && (fabs(e[0]) < s) && (fabs(e[0]) < s);
         }
 
-        static vec3 random() {
-            // Creates a random vector with length < 1
-            double p = random_double();
-            double a = random_double() * pi;
-            double b = random_double() * 2 * pi;
-            double r = p * sin(a);
-            return vec3(r * cos(b), r * sin(b), p * cos(a));
+        vec3 unit() const {
+            return *this / this->length();
         }
 
+        vec3 with_length(double l) const {
+            return l * this->unit();
+        }
+
+        vec3 reflect(const vec3& unit_normal) const {
+            return *this - 2*dot(*this, unit_normal)*unit_normal;
+        }
+
+        static double dot(const vec3 &u, const vec3 &v) {
+            return u.e[0] * v.e[0]
+                + u.e[1] * v.e[1]
+                + u.e[2] * v.e[2];
+        }
+
+        static vec3 cross(const vec3 &u, const vec3 &v) {
+            return vec3(
+                u.e[1] * v.e[2] - u.e[2] * v.e[1],
+                u.e[2] * v.e[0] - u.e[0] * v.e[2],
+                u.e[0] * v.e[1] - u.e[1] * v.e[0]
+            );
+        }
+        
+        // Creates a random unit vector 
         static vec3 random_unit() {
-            // Creates a random vector with length == 1
             double a = random_double() * pi;
             double b = random_double() * 2 * pi;
             double r = sin(a);
             return vec3(r * cos(b), r * sin(b), cos(a));
         }
 
-        static vec3 random_unit_in_halfplane(const vec3& normal) {
-            // Creates a random vector in the direction cwith length == 1
+        // Creates a random unit vector for isotropic scattering
+        static vec3 scatter_isotropic(const vec3& unit_normal) {
             vec3 unit_vector = random_unit();
-            if (dot(unit_vector, normal) < 0) unit_vector = -unit_vector;
+            if (dot(unit_vector, unit_normal) < 0) unit_vector = -unit_vector;
             return unit_vector;
         }
 
-        static vec3 reflect(const vec3& v, const vec3& n) {
-            // Assumes n is unit length
-            return v - 2*dot(v,n)*n;
+        // Creates a random unit vector for lambertian scattering
+        static vec3 scatter_lambertian(const vec3& unit_normal) {
+            vec3 scatter_direction = unit_normal + random_unit();
+            if (scatter_direction.near_zero()) scatter_direction = unit_normal;
+            return scatter_direction;
         }
 };
 
@@ -151,28 +166,6 @@ inline vec3 operator*(const vec3 &v, double t) {
 
 inline vec3 operator/(const vec3 &v, double t) {
     return (1/t) * v;
-}
-
-inline double dot(const vec3 &u, const vec3 &v) {
-    return u.e[0] * v.e[0]
-        + u.e[1] * v.e[1]
-        + u.e[2] * v.e[2];
-}
-
-inline vec3 cross(const vec3 &u, const vec3 &v) {
-    return vec3(
-        u.e[1] * v.e[2] - u.e[2] * v.e[1],
-        u.e[2] * v.e[0] - u.e[0] * v.e[2],
-        u.e[0] * v.e[1] - u.e[1] * v.e[0]
-    );
-}
-
-inline vec3 unit_vector(vec3 v) {
-    return v / v.length();
-}
-
-inline vec3 vector_with_length(vec3 v, double l) {
-    return l * unit_vector(v);
 }
 
 #endif

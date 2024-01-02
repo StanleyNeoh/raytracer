@@ -15,8 +15,8 @@ class isotropic: public material {
             ray& scattered
         ) const override {
             (void) r_in;
-            vec3 scatter_direction = vec3::random_unit_in_halfplane(rec.normal);
-            if (scatter_direction.near_zero()) scatter_direction = rec.normal;
+            vec3 scatter_direction = vec3::scatter_isotropic(rec.unit_normal);
+            if (scatter_direction.near_zero()) scatter_direction = rec.unit_normal;
             scattered = ray(rec.p, scatter_direction);
             return true;
         }

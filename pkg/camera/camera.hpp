@@ -51,7 +51,7 @@ class camera {
             double vp_width_v = 2.0;
             double vp_width_u = vp_width_v * (static_cast<double>(num_pixel_u) / num_pixel_v);
             vec3 vp_v = vec3(0, -vp_width_v, 0);
-            vec3 vp_u = vector_with_length(cross(direction, vp_v), vp_width_u);
+            vec3 vp_u = vec3::cross(direction, vp_v).with_length(vp_width_u);
 
             pixel_dv = vp_v / num_pixel_v;
             pixel_du = vp_u / num_pixel_u;
@@ -85,8 +85,7 @@ class camera {
                 return c;
             }
 
-            vec3 unit_dir = unit_vector(r.direction());
-            auto a = 0.5 * (unit_dir.y() + 1.0);
+            double a = 0.5 * (r.unit_direction().y() + 1.0);
             return std::move((1.0-a)*color(1.0, 1.0, 1.0) + a*color(0.5, 0.7, 1.0));
         }
 

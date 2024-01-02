@@ -16,8 +16,8 @@ class sphere: public hittable {
 
         bool hit(const ray& r, interval ray_t, hit_record& rec) const override {
             vec3 oc = r.origin() - center;
-            double a = r.direction().length_squared();
-            double half_b = dot(oc, r.direction());
+            double a = r.unit_direction().length_squared();
+            double half_b = vec3::dot(oc, r.unit_direction());
             double c = oc.length_squared() - radius * radius;
             double D = half_b * half_b - a * c;
             if (D < 0) return false;

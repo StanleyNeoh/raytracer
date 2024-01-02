@@ -10,17 +10,16 @@ class material;
 class hit_record {
     public:
         point3 p;
-        vec3 normal;
+        vec3 unit_normal;
         shared_ptr<material> mat;
         double t;
         bool front_face;
 
-        void set_face_normal(const ray& r, const vec3& outward_normal) {
+        void set_face_normal(const ray& r, const vec3& out_unit_normal) {
             // Sets the hit record normal vector
-            // `outward_normal` assumed to have unit length.
-            // `normal` always against the ray.
-            front_face = dot(r.direction(), outward_normal) < 0;
-            normal = front_face ? outward_normal : -outward_normal;
+            // `out_unit_normal` always against the ray (outward wrt surface).
+            front_face = vec3::dot(r.unit_direction(), out_unit_normal) < 0;
+            unit_normal = front_face ? out_unit_normal : -out_unit_normal;
         }
 };
 
