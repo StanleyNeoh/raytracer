@@ -10,8 +10,12 @@ class ray {
 
     public:
         ray() {}
+
         ray(const point3& orig, const vec3& unit_dir): orig(orig), unit_dir(unit_dir) {}
+
         point3 origin() const { return orig; }
+
+        // Always unit
         vec3 unit_direction() const { return unit_dir; }
 
         point3 at(double t) const {

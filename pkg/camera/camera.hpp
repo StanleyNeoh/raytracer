@@ -65,13 +65,14 @@ class camera {
                 + 0.5 * (pixel_du + pixel_dv);
         }
 
+
+        // Get a randomly sampled camera ray for the pixel at location ui, vi
         ray get_ray(int ui, int vi) {
-            // Get a randomly sampled camera ray for the pixel at location ui, vi
             double rui = random_double() - 0.5 + ui; 
             double rvi = random_double() - 0.5 + vi; 
             point3 pixel_center = pixel00_loc + (rui * pixel_du) + (rvi * pixel_dv);
             vec3 ray_dir = pixel_center - center;
-            return ray(center, ray_dir);
+            return ray(center, ray_dir.unit());
         }
 
         color ray_color(const ray& r, int depth, const hittable& world) {

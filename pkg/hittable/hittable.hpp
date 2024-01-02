@@ -4,22 +4,22 @@
 #include "../base/interval.hpp"
 #include "../base/ray.hpp"
 #include "../base/vec3.hpp"
+#include <memory>
 
 class material;
 
 class hit_record {
     public:
         point3 p;
-        vec3 unit_normal;
+        vec3 unit_normal;   // `unit_normal` always against the ray (outward wrt surface).
         shared_ptr<material> mat;
         double t;
-        bool front_face;
+        bool front_face;    // whether ray hit the front face (outer face)
 
-        void set_face_normal(const ray& r, const vec3& out_unit_normal) {
-            // Sets the hit record normal vector
-            // `out_unit_normal` always against the ray (outward wrt surface).
-            front_face = vec3::dot(r.unit_direction(), out_unit_normal) < 0;
-            unit_normal = front_face ? out_unit_normal : -out_unit_normal;
+        // Sets the hit record normal vector
+        void set_face_normal(const ray& r, const vec3& front_unit_normal) {
+            front_face = vec3::dot(r.unit_direction(), front_unit_normal) < 0;
+            unit_normal = front_face ? front_unit_normal : -front_unit_normal;
         }
 };
 

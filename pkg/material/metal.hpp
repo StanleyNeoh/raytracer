@@ -13,8 +13,8 @@ class metal: public material {
             const hit_record& rec,
             ray& scattered
         ) const override {
-            vec3 reflected = r_in.unit_direction().reflect(rec.unit_normal);
-            scattered = ray(rec.p, reflected + fuzz * vec3::random_unit());
+            vec3 scatter_direction = r_in.unit_direction().reflect(rec.unit_normal) + fuzz * vec3::random_unit();
+            scattered = ray(rec.p, scatter_direction.unit());
             return true;
         }
         bool transform(color& scattered_color) const override {

@@ -15,7 +15,9 @@ class lambertian: public material {
             ray& scattered
         ) const override {
             (void) r_in;
-            scattered = ray(rec.p, r_in.unit_direction().scatter_lambertian(rec.unit_normal));
+            vec3 scatter_direction = rec.unit_normal + vec3::random_unit();
+            if (scatter_direction.near_zero()) scatter_direction = rec.unit_normal;
+            scattered = ray(rec.p, scatter_direction.unit());
             return true;
         };
 

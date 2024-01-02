@@ -24,5 +24,6 @@ using std::shared_ptr, std::make_shared, std::sqrt;
 #include "material/lambertian.hpp"
 #include "material/isotropic.hpp"
 #include "material/metal.hpp"
+#include "material/dielectric.hpp"
 
 #endif

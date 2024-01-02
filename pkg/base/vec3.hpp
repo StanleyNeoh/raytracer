@@ -8,6 +8,7 @@
 using std::sqrt, std::ostream;
 
 class vec3;
+class hit_record;
 inline ostream& operator<<(std::ostream &out, const vec3 &v);
 inline vec3 operator+(const vec3 &u, const vec3 &v);
 inline vec3 operator-(const vec3 &u, const vec3 &v);
@@ -67,7 +68,7 @@ class vec3 {
 
         bool near_zero() const {
             double s = 1e-8;
-            return (fabs(e[0]) < s) && (fabs(e[0]) < s) && (fabs(e[0]) < s);
+            return (fabs(e[0]) < s) && (fabs(e[1]) < s) && (fabs(e[1]) < s);
         }
 
         vec3 unit() const {
@@ -78,8 +79,18 @@ class vec3 {
             return l * this->unit();
         }
 
+        // Preserves length
         vec3 reflect(const vec3& unit_normal) const {
             return *this - 2*dot(*this, unit_normal)*unit_normal;
+        }
+
+        // Preserves length
+        // `unit_normal` taken to be against `*this`
+        vec3 refract(const vec3& unit_normal, double rel_refractive_index) {
+            double R_cos = dot(*this, unit_normal);
+            vec3 r_out_par = rel_refractive_index * (*this -  R_cos * unit_normal);
+            vec3 r_out_perp = -unit_normal * sqrt(this->length_squared() - r_out_par.length_squared());
+            return r_out_par + r_out_perp;
         }
 
         static double dot(const vec3 &u, const vec3 &v) {
@@ -103,20 +114,6 @@ class vec3 {
             double r = sin(a);
             return vec3(r * cos(b), r * sin(b), cos(a));
         }
-
-        // Creates a random unit vector for isotropic scattering
-        static vec3 scatter_isotropic(const vec3& unit_normal) {
-            vec3 unit_vector = random_unit();
-            if (dot(unit_vector, unit_normal) < 0) unit_vector = -unit_vector;
-            return unit_vector;
-        }
-
-        // Creates a random unit vector for lambertian scattering
-        static vec3 scatter_lambertian(const vec3& unit_normal) {
-            vec3 scatter_direction = unit_normal + random_unit();
-            if (scatter_direction.near_zero()) scatter_direction = unit_normal;
-            return scatter_direction;
-        }
 };
 
 // point3 is just an alias for vec3, but useful for geometric clarity in the code.
@@ -124,6 +121,7 @@ using point3 = vec3;
 using color = vec3;
 
 //  Vector Utility Functions
+
 inline ostream& operator<<(std::ostream &out, const vec3 &v) {
     return out << v.e[0] << ' ' << v.e[1] << ' ' << v.e[2];
 }
