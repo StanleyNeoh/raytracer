@@ -7,6 +7,9 @@
 #include "../hittable/hittable.hpp"
 
 #include <iostream>
+#include <chrono>
+
+using namespace std::chrono;
 
 class camera {
     public:
@@ -21,6 +24,7 @@ class camera {
         camera(point3 _center, vec3 _direction): center(_center), direction(_direction) {}
 
         void render_ppm(ostream& out, const hittable& world) {
+            auto start_time = high_resolution_clock::now();
             setup();
             out << "P3\n" << num_pixel_u << ' ' << num_pixel_v << "\n255\n";
             for (int vi = 0; vi < num_pixel_v; vi++) {
@@ -34,7 +38,8 @@ class camera {
                     write_color(out, pixel_color);
                 }
             }
-            std::clog << "\rDone                     \n";
+            auto duration = duration_cast<microseconds>(high_resolution_clock::now() - start_time);
+            std::clog << "\rDone in " << duration.count() << "μs.      \n";
         }
         
     private:
