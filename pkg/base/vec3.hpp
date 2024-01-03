@@ -106,6 +106,16 @@ class vec3 {
                 u.e[0] * v.e[1] - u.e[1] * v.e[0]
             );
         }
+
+        // Creates a random vector in [0, 1)^3
+        static vec3 random() {
+            return vec3(random_double(), random_double(), random_double());
+        }
+
+        // Creates a random vector in [min, max)^3
+        static vec3 random(double min, double max) {
+            return vec3(random_double(min, max), random_double(min, max), random_double(min, max));
+        }
         
         // Creates a random unit vector 
         static vec3 random_unit() {

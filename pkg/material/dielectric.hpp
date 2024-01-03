@@ -7,6 +7,7 @@
 
 class dielectric: public material {
     public:
+        dielectric(double ri): attenuation(color(1,1,1)), ri(ri) {}
         dielectric(const color& attenuation, double ri): attenuation(attenuation), ri(ri) {}
 
         bool scatter(
