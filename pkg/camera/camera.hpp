@@ -11,25 +11,34 @@
 
 using namespace std::chrono;
 
+// We have 2 coordinate systems, viewport and world
+// For our viewport coordinate system, we want to think of:
+// - `u` is right (correspond to width), 
+// - `v` is down (correspond to height),
+// - `w` is forward
+//
+// Hence, our viewport coordinate system is right-handed. w ~ (u x v)
+//
+// For our world coordinate system, we will use the typical right-handed cartesian basis `i, j, k`.
 class camera {
     public:
-        int img_w = 400;
+        int img_w = 800;
         double aspect_ratio  = 16.0 / 9.0;
         int samples_per_pixel = 10;
         int max_depth = 10;
 
-        point3 center;
-        vec3 direction; // length is focal length
-
-        camera(point3 _center, vec3 _direction): center(_center), direction(_direction) {}
+        double vfov = 90;
+        point3 lookfrom = point3(0, 0, 0);
+        point3 lookat = point3(0, 1, 0); // length is focal length
+        vec3 vup = vec3(0, 0, 1);
 
         void render_ppm(ostream& out, const hittable& world) {
             auto start_time = high_resolution_clock::now();
             setup();
-            out << "P3\n" << num_pixel_u << ' ' << num_pixel_v << "\n255\n";
-            for (int vi = 0; vi < num_pixel_v; vi++) {
-                std::clog << "\rScanlines remaining: " << (num_pixel_v - vi) << ' ' << std::flush;
-                for (int ui = 0; ui < num_pixel_u; ui++) {
+            out << "P3\n" << img_w << ' ' << img_h << "\n255\n";
+            for (int vi = 0; vi < img_h; vi++) {
+                std::clog << "\rScanlines remaining: " << (img_h - vi) << ' ' << std::flush;
+                for (int ui = 0; ui < img_w; ui++) {
                     color pixel_color(0, 0, 0);
                     for (int sample = 0; sample < samples_per_pixel; sample++) {
                         ray r = get_ray(ui, vi);
@@ -43,25 +52,25 @@ class camera {
         }
         
     private:
+        int img_h;
+        vec3 u, v, w;
         point3 pixel00_loc;
         vec3 pixel_du;
         vec3 pixel_dv;
-        int num_pixel_u;
-        int num_pixel_v;
 
         void setup() {
-            num_pixel_v = std::max(1, static_cast<int>(img_w / aspect_ratio));
-            num_pixel_u = img_w;
+            img_h = std::max(1, static_cast<int>(img_w / aspect_ratio));
 
-            double vp_width_v = 2.0;
-            double vp_width_u = vp_width_v * (static_cast<double>(num_pixel_u) / num_pixel_v);
-            vec3 vp_v = vec3(0, -vp_width_v, 0);
-            vec3 vp_u = vec3::cross(direction, vp_v).with_length(vp_width_u);
-
-            pixel_dv = vp_v / num_pixel_v;
-            pixel_du = vp_u / num_pixel_u;
-            pixel00_loc = center + direction 
-                - 0.5 * (vp_v + vp_u)
+            w = lookat - lookfrom;
+            double focal_length = w.length();
+            double vp_h = 2 * focal_length * tan(deg_to_rad(vfov) / 2);
+            double vp_w = vp_h * (static_cast<double>(img_w) / img_h);
+            u = vec3::cross(w, vup).with_length(vp_w);
+            v = vec3::cross(w, u).with_length(vp_h);
+            pixel_dv = v / img_h;
+            pixel_du = u / img_w;
+            pixel00_loc = lookfrom + w 
+                - 0.5 * (u + v)
                 + 0.5 * (pixel_du + pixel_dv);
         }
 
@@ -71,8 +80,8 @@ class camera {
             double rui = random_double() - 0.5 + ui; 
             double rvi = random_double() - 0.5 + vi; 
             point3 pixel_center = pixel00_loc + (rui * pixel_du) + (rvi * pixel_dv);
-            vec3 ray_dir = pixel_center - center;
-            return ray(center, ray_dir.unit());
+            vec3 ray_dir = pixel_center - lookfrom;
+            return ray(lookfrom, ray_dir.unit());
         }
 
         color ray_color(const ray& r, int depth, const hittable& world) {
