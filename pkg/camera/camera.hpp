@@ -22,15 +22,20 @@ using namespace std::chrono;
 // For our world coordinate system, we will use the typical right-handed cartesian basis `i, j, k`.
 class camera {
     public:
-        int img_w = 800;
+        // Parameters
+        int img_w = 400;
         double aspect_ratio  = 16.0 / 9.0;
-        int samples_per_pixel = 10;
-        int max_depth = 10;
-
         double vfov = 90;
+        double aperture = 0.0;
+        double focal_length = -1.0; // if `focal_length < 0`, focal_length determined by what is looking at
+
         point3 lookfrom = point3(0, 0, 0);
         point3 lookat = point3(0, 1, 0); // length is focal length
         vec3 vup = vec3(0, 0, 1);
+        
+        // Hyperparameters
+        int samples_per_pixel = 10;
+        int max_depth = 10;
 
         void render_ppm(ostream& out, const hittable& world) {
             auto start_time = high_resolution_clock::now();
@@ -44,16 +49,16 @@ class camera {
                         ray r = get_ray(ui, vi);
                         pixel_color += ray_color(r, max_depth, world);
                     }
-                    write_color(out, pixel_color);
+                    write_color(out, pixel_color / samples_per_pixel);
                 }
             }
             auto duration = duration_cast<microseconds>(high_resolution_clock::now() - start_time);
-            std::clog << "\rDone in " << duration.count() << "μs.      \n";
+            std::clog << "\rDone in " << duration.count() / 1000.0 << "ms.           \n";
         }
         
     private:
         int img_h;
-        vec3 u, v, w;
+        vec3 u, v, w;   // unit vector
         point3 pixel00_loc;
         vec3 pixel_du;
         vec3 pixel_dv;
@@ -61,17 +66,23 @@ class camera {
         void setup() {
             img_h = std::max(1, static_cast<int>(img_w / aspect_ratio));
 
-            w = lookat - lookfrom;
-            double focal_length = w.length();
-            double vp_h = 2 * focal_length * tan(deg_to_rad(vfov) / 2);
+            double vp_distance = focal_length > 0 ? focal_length : (lookat - lookfrom).length();
+            double vp_h = 2 * vp_distance * tan(deg_to_rad(vfov) / 2);
             double vp_w = vp_h * (static_cast<double>(img_w) / img_h);
-            u = vec3::cross(w, vup).with_length(vp_w);
-            v = vec3::cross(w, u).with_length(vp_h);
-            pixel_dv = v / img_h;
-            pixel_du = u / img_w;
-            pixel00_loc = lookfrom + w 
-                - 0.5 * (u + v)
-                + 0.5 * (pixel_du + pixel_dv);
+
+            w = (lookat - lookfrom).unit();
+            u = vec3::cross(w, vup).unit();
+            v = vec3::cross(w, u);
+
+            vec3 w_vp = vp_distance * w;
+            vec3 v_vp = vp_h * v;
+            vec3 u_vp = vp_w * u;
+            pixel_dv = v_vp / img_h;
+            pixel_du = u_vp / img_w;
+
+            pixel00_loc = lookfrom 
+                + w_vp
+                + 0.5 * (pixel_du + pixel_dv - u_vp - v_vp);
         }
 
 
@@ -79,9 +90,9 @@ class camera {
         ray get_ray(int ui, int vi) {
             double rui = random_double() - 0.5 + ui; 
             double rvi = random_double() - 0.5 + vi; 
-            point3 pixel_center = pixel00_loc + (rui * pixel_du) + (rvi * pixel_dv);
-            vec3 ray_dir = pixel_center - lookfrom;
-            return ray(lookfrom, ray_dir.unit());
+            point3 to = pixel00_loc + (rui * pixel_du) + (rvi * pixel_dv);
+            point3 from = lookfrom + aperture * vec3::random_unit(u, v);
+            return ray(from, (to-from).unit());
         }
 
         color ray_color(const ray& r, int depth, const hittable& world) {
@@ -105,20 +116,11 @@ class camera {
         }
 
         void write_color(ostream& out, color pixel_color) const {
-            double r = pixel_color.x() / samples_per_pixel;
-            double g = pixel_color.y() / samples_per_pixel;
-            double b = pixel_color.z() / samples_per_pixel;
-
-            // Apply gamma transform
-            r = sqrt(r);
-            g = sqrt(g);
-            b = sqrt(b);
-
             // Write the translated [0, 255] value of each color component.
             static const interval intensity(0.000, 0.999);
-            out << static_cast<int>(255.999 * intensity.clamp(r)) << ' '
-                << static_cast<int>(255.999 * intensity.clamp(g)) << ' '
-                << static_cast<int>(255.999 * intensity.clamp(b)) << '\n';
+            out << static_cast<int>(255.999 * intensity.clamp(sqrt(pixel_color.x()))) << ' '
+                << static_cast<int>(255.999 * intensity.clamp(sqrt(pixel_color.y()))) << ' '
+                << static_cast<int>(255.999 * intensity.clamp(sqrt(pixel_color.z()))) << '\n';
         }
 };
 

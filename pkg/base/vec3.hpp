@@ -114,6 +114,13 @@ class vec3 {
             double r = sin(a);
             return vec3(r * cos(b), r * sin(b), cos(a));
         }
+        
+        // Create a random unit vector on a disk
+        // `unit_u` and `unit_v` are orthonormal basis
+        static vec3 random_unit(vec3 unit_u, vec3 unit_v) {
+            double theta = random_double() * 2 * pi;
+            return cos(theta) * unit_u + sin(theta) * unit_v;
+        }
 };
 
 // point3 is just an alias for vec3, but useful for geometric clarity in the code.

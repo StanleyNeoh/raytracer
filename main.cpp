@@ -32,6 +32,7 @@ int main() {
     cam.vup = vec3(0, 0, 1);
     cam.lookfrom = point3(2, 2, 2);
     cam.lookat = point3(0, 0, 1);
+    cam.aperture = 0.05;
 
     cam.render_ppm(std::cout, world);
 }
