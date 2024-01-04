@@ -9,18 +9,26 @@ MAIN_PATH := $(BUILD_DIR)/main
 PPM_PATH := image.ppm
 
 SRCS := $(shell find $(SRC_DIR) -name '*.cpp')
+OBJS := $(SRCS:$(SRC_DIR)/%.cpp=$(BUILD_DIR)/%.o)
 
 # Actions
+all: render
+
 .PHONY: render clean
 render: main
-	./$(MAIN_PATH) > $(PPM_PATH)
+	@echo Beginning render
+	@./$(MAIN_PATH) > $(PPM_PATH)
 
 clean:
-	rm -rf $(OUT_DIR) $(PPM_PATH)
+	@echo Cleaning up
+	@rm -rf $(BUILD_DIR) $(PPM_PATH)
 
 # Build
-main: $(BUILD_DIR) $(SRCS)
-	$(CC) $(CC_FLAGS) $(SRCS) -o $(MAIN_PATH)
-	
-$(BUILD_DIR):
-	mkdir $(BUILD_DIR)
+main: $(OBJS)
+	@echo Linking object files
+	@$(CC) $(CC_FLAGS) $(OBJS) -o $(MAIN_PATH)
+
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp
+	@echo Building $@
+	@mkdir -p $(dir $@)
+	@$(CC) $(CC_FLAGS) -c $< -o $@
