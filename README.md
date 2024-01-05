@@ -19,7 +19,11 @@ This project is from [_Ray Tracing in One Weekend_](https://raytracing.github.io
 To use and render some scenes
 1. clone the project to your machine
 2. run `make`
-3. Done! your image is in `.ppm` fomat as `image.ppm`
+3. You will be prompted on which scene you want to render
+
+    ![on_make](blob/on_make.png)
+4. Input the corresponding option.
+4. And your image is created in `.ppm` fomat as `image.ppm`
 
 ## Future plans
 - [ ] Hardware acceleration
